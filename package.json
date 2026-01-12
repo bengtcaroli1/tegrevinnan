@@ -1,0 +1,16 @@
+{
+  "name": "tegrevinnan",
+  "version": "1.0.0",
+  "description": "Webshop för Tegrevinnan - Te, Kaffe & Choklad",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
+    "stripe": "^14.25.0",
+    "uuid": "^9.0.0"
+  }
+}

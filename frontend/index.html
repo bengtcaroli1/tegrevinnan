@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tegrevinnan — Te, Kaffe & Choklad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">☕</span>
+                <span class="logo-text">Tegrevinnan</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#" data-category="all" class="nav-link active">Alla Produkter</a></li>
+                <li><a href="#" data-category="te" class="nav-link">Te</a></li>
+                <li><a href="#" data-category="kaffe" class="nav-link">Kaffe</a></li>
+                <li><a href="#" data-category="choklad" class="nav-link">Choklad</a></li>
+            </ul>
+            <button class="cart-button" id="cartBtn">
+                <span class="cart-icon">🛒</span>
+                <span class="cart-count" id="cartCount">0</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero" id="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Tegrevinnan</h1>
+            <p class="hero-tagline">Utsökta smaker sedan 1892</p>
+            <p class="hero-description">Te, kaffe och choklad av högsta kvalitet, importerade från världens finaste plantager</p>
+            <a href="#products" class="cta-button">Utforska Sortimentet</a>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-image">
+                    <div class="ornate-frame">
+                        <div class="frame-content">☕</div>
+                    </div>
+                </div>
+                <div class="about-text">
+                    <h2>Välkommen till Tegrevinnan</h2>
+                    <p>I hjärtat av en genuin passion för livets finare smaker grundades Tegrevinnan med en enkel filosofi: att erbjuda endast det allra bästa.</p>
+                    <p>Våra teer väljs ut med samma omsorg som en sommelier väljer vin. Vårt kaffe rostas i små partier för optimal fräschör. Och vår choklad? Den är helt enkelt sublim.</p>
+                    <p>Varje produkt i vår butik har noggrant valts ut för sin exceptionella kvalitet och unika karaktär.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section" id="products">
+        <div class="container">
+            <h2 class="section-title">Vårt Sortiment</h2>
+            <div class="category-tabs">
+                <button class="tab-btn active" data-category="all">Alla</button>
+                <button class="tab-btn" data-category="te">Te</button>
+                <button class="tab-btn" data-category="kaffe">Kaffe</button>
+                <button class="tab-btn" data-category="choklad">Choklad</button>
+            </div>
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Din Varukorg</h3>
+            <button class="close-cart" id="closeCart">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- Cart items will be loaded here -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Totalt:</span>
+                <span id="cartTotal">0 kr</span>
+            </div>
+            <button class="checkout-btn" id="checkoutBtn">Gå till kassan</button>
+        </div>
+    </aside>
+
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-body" id="modalBody">
+                <!-- Product details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-content checkout-modal">
+            <button class="modal-close" id="checkoutClose">&times;</button>
+            <div class="checkout-body">
+                <h2>Beställning</h2>
+                <form id="checkoutForm">
+                    <div class="form-section">
+                        <h3>Kontaktuppgifter</h3>
+                        <div class="form-group">
+                            <label for="customerName">Namn *</label>
+                            <input type="text" id="customerName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerEmail">E-post *</label>
+                            <input type="email" id="customerEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerPhone">Telefon *</label>
+                            <input type="tel" id="customerPhone" name="phone" required>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <h3>Leveransadress</h3>
+                        <div class="form-group">
+                            <label for="address">Adress *</label>
+                            <input type="text" id="address" name="address" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="postalCode">Postnummer *</label>
+                                <input type="text" id="postalCode" name="postalCode" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="city">Ort *</label>
+                                <input type="text" id="city" name="city" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <h3>Ordersammanfattning</h3>
+                        <div class="order-summary" id="orderSummary">
+                            <!-- Order summary will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Meddelande (valfritt)</label>
+                        <textarea id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="submit-order-btn">💳 Betala säkert med kort</button>
+                    <div class="secure-badge">Säker betalning via Stripe</div>
+                    <div class="payment-methods">
+                        <span class="payment-method-icon" title="Visa">💳</span>
+                        <span class="payment-method-icon" title="Mastercard">💳</span>
+                        <span class="payment-method-icon" title="Apple Pay">🍎</span>
+                        <span class="payment-method-icon" title="Klarna">K</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal-content confirmation-modal">
+            <div class="confirmation-body">
+                <div class="confirmation-icon">✓</div>
+                <h2>Tack för din beställning!</h2>
+                <p>Vi har mottagit din beställning och kommer att kontakta dig inom kort med bekräftelse och betalningsinformation.</p>
+                <p class="order-id">Ordernummer: <span id="orderId"></span></p>
+                <button class="cta-button" id="confirmationClose">Fortsätt handla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Tegrevinnan</h4>
+                    <p>Utsökta smaker sedan 1892. Te, kaffe och choklad av högsta kvalitet.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Kontakt</h4>
+                    <p>📧 info@tegrevinnan.se</p>
+                    <p>📞 08-123 45 67</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Besöksadress</h4>
+                    <p>Storgatan 15</p>
+                    <p>111 22 Stockholm</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Öppettider</h4>
+                    <p>Mån-Fre: 10-18</p>
+                    <p>Lör: 10-16</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Tegrevinnan. Alla rättigheter förbehållna.</p>
+                <a href="/admin.html" class="admin-link">Administration</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
+

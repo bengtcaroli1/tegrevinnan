@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - Tegrevinnan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container">
+            <div class="login-header">
+                <span class="login-icon">☕</span>
+                <h1>Tegrevinnan</h1>
+                <p>Administration</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Användarnamn</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Lösenord</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-btn">Logga in</button>
+                <p class="login-error" id="loginError"></p>
+            </form>
+            <a href="/" class="back-link">← Tillbaka till butiken</a>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-dashboard" id="adminDashboard">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-icon">☕</span>
+                <h2>Tegrevinnan</h2>
+                <p>Admin</p>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-section="products">
+                    <span>📦</span> Produkter
+                </button>
+                <button class="nav-item" data-section="orders">
+                    <span>📋</span> Beställningar
+                </button>
+                <button class="nav-item" data-section="settings">
+                    <span>⚙️</span> Inställningar
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="/" class="view-store">👁 Visa butik</a>
+                <button class="logout-btn" id="logoutBtn">Logga ut</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Products Section -->
+            <section class="admin-section active" id="productsSection">
+                <div class="section-header">
+                    <h1>Produkter</h1>
+                    <button class="add-btn" id="addProductBtn">+ Lägg till produkt</button>
+                </div>
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Produkt</th>
+                                <th>Kategori</th>
+                                <th>Pris</th>
+                                <th>Vikt</th>
+                                <th>I lager</th>
+                                <th>Åtgärder</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Products loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section class="admin-section" id="ordersSection">
+                <div class="section-header">
+                    <h1>Beställningar</h1>
+                </div>
+                <div class="orders-list" id="ordersList">
+                    <!-- Orders loaded here -->
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="admin-section" id="settingsSection">
+                <div class="section-header">
+                    <h1>Inställningar</h1>
+                </div>
+                <div class="settings-content">
+                    <div class="settings-card">
+                        <h3>Byt lösenord</h3>
+                        <form id="passwordForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Nuvarande lösenord</label>
+                                <input type="password" id="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">Nytt lösenord</label>
+                                <input type="password" id="newPassword" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Bekräfta nytt lösenord</label>
+                                <input type="password" id="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="save-btn">Spara lösenord</button>
+                        </form>
+                    </div>
+                    <div class="settings-card">
+                        <h3>Information</h3>
+                        <p><strong>Version:</strong> 1.0.0</p>
+                        <p><strong>Standard inloggning:</strong></p>
+                        <p>Användarnamn: admin</p>
+                        <p>Lösenord: tegrevinnan2024</p>
+                        <p class="warning">⚠️ Byt lösenord direkt efter första inloggningen!</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Lägg till produkt</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productName">Produktnamn *</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">Kategori *</label>
+                        <select id="productCategory" required>
+                            <option value="te">Te</option>
+                            <option value="kaffe">Kaffe</option>
+                            <option value="choklad">Choklad</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productPrice">Pris (kr) *</label>
+                        <input type="number" id="productPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="productWeight">Vikt *</label>
+                        <input type="text" id="productWeight" required placeholder="ex: 100g">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productOrigin">Ursprung</label>
+                        <input type="text" id="productOrigin" placeholder="ex: Sri Lanka">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="productInStock" checked>
+                            I lager
+                        </label>
+                        <label>
+                            <input type="checkbox" id="productFeatured">
+                            Utvald produkt
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">Beskrivning *</label>
+                    <textarea id="productDescription" rows="4" required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelProduct">Avbryt</button>
+                    <button type="submit" class="save-btn">Spara produkt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal-content order-modal">
+            <div class="modal-header">
+                <h2>Beställning</h2>
+                <button class="modal-close" id="orderModalClose">&times;</button>
+            </div>
+            <div class="order-detail" id="orderDetail">
+                <!-- Order details loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-content delete-modal">
+            <div class="modal-header">
+                <h2>Bekräfta borttagning</h2>
+            </div>
+            <p>Är du säker på att du vill ta bort denna produkt?</p>
+            <p class="delete-product-name" id="deleteProductName"></p>
+            <div class="modal-actions">
+                <button class="cancel-btn" id="cancelDelete">Avbryt</button>
+                <button class="delete-btn" id="confirmDelete">Ta bort</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/admin.js"></script>
+</body>
+</html>
+
