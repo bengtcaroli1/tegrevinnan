@@ -15,7 +15,13 @@ const stripe = require('stripe')(STRIPE_SECRET_KEY);
 
 // CORS - allow frontend to access API
 app.use(cors({
-    origin: [FRONTEND_URL, 'http://localhost:3000', 'http://localhost:5173'],
+    origin: [
+        FRONTEND_URL, 
+        'http://localhost:3000', 
+        'http://localhost:5173',
+        'https://tegrevinnan.vercel.app',
+        /\.vercel\.app$/  // Allow all vercel.app subdomains
+    ],
     credentials: true
 }));
 
