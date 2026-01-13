@@ -455,6 +455,16 @@ body {
     opacity: 0.9;
 }
 
+/* Code styling */
+code {
+    background: var(--color-cream-dark);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: var(--color-forest);
+}
+
 /* Orders List */
 .orders-list {
     display: flex;

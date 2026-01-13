@@ -99,6 +99,20 @@ async function initialize() {
             });
             console.log('👤 Admin user created. Username: admin, Password: tegrevinnan2024');
         }
+        
+        // Create default categories if none exist
+        const categoryCount = await db.getCategoryCount();
+        if (categoryCount === 0) {
+            const defaultCategories = [
+                { id: uuidv4(), name: 'Te', slug: 'te', icon: '🍵', sortOrder: 1 },
+                { id: uuidv4(), name: 'Kaffe', slug: 'kaffe', icon: '☕', sortOrder: 2 },
+                { id: uuidv4(), name: 'Choklad', slug: 'choklad', icon: '🍫', sortOrder: 3 }
+            ];
+            for (const cat of defaultCategories) {
+                await db.createCategory(cat);
+            }
+            console.log('🏷️ Default categories created');
+        }
     } catch (error) {
         console.error('Database initialization error:', error);
     }
@@ -276,6 +290,66 @@ app.get('/api/stripe/session/:sessionId', async (req, res) => {
     } catch (error) {
         console.error('Session verification error:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// --- Categories ---
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await db.getAllCategories();
+        res.json(categories);
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+});
+
+app.get('/api/categories/:id', async (req, res) => {
+    try {
+        const category = await db.getCategoryById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        res.json(category);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch category' });
+    }
+});
+
+app.post('/api/categories', requireAuth, async (req, res) => {
+    try {
+        const category = await db.createCategory({
+            id: uuidv4(),
+            ...req.body
+        });
+        res.status(201).json(category);
+    } catch (error) {
+        console.error('Error creating category:', error);
+        res.status(500).json({ error: 'Failed to create category' });
+    }
+});
+
+app.put('/api/categories/:id', requireAuth, async (req, res) => {
+    try {
+        const category = await db.updateCategory(req.params.id, req.body);
+        if (!category) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        res.json(category);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update category' });
+    }
+});
+
+app.delete('/api/categories/:id', requireAuth, async (req, res) => {
+    try {
+        const deleted = await db.deleteCategory(req.params.id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        res.json({ message: 'Category deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete category' });
     }
 });
 

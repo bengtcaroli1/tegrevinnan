@@ -9,15 +9,11 @@ const API_BASE = window.API_URL || '';
 let authToken = null;
 let products = [];
 let orders = [];
+let categories = [];
 let currentProductId = null;
-let deleteProductId = null;
-
-// Category icons
-const categoryIcons = {
-    te: '🍵',
-    kaffe: '☕',
-    choklad: '🍫'
-};
+let currentCategoryId = null;
+let deleteItemId = null;
+let deleteItemType = null;
 
 // DOM Elements
 const loginScreen = document.getElementById('loginScreen');
@@ -35,9 +31,18 @@ const modalClose = document.getElementById('modalClose');
 const productForm = document.getElementById('productForm');
 const cancelProduct = document.getElementById('cancelProduct');
 
+// Categories
+const categoriesTableBody = document.getElementById('categoriesTableBody');
+const addCategoryBtn = document.getElementById('addCategoryBtn');
+const categoryModal = document.getElementById('categoryModal');
+const categoryModalTitle = document.getElementById('categoryModalTitle');
+const categoryModalClose = document.getElementById('categoryModalClose');
+const categoryForm = document.getElementById('categoryForm');
+const cancelCategory = document.getElementById('cancelCategory');
+
 // Delete modal
 const deleteModal = document.getElementById('deleteModal');
-const deleteProductName = document.getElementById('deleteProductName');
+const deleteItemName = document.getElementById('deleteItemName');
 const confirmDelete = document.getElementById('confirmDelete');
 const cancelDelete = document.getElementById('cancelDelete');
 
@@ -76,7 +81,6 @@ async function checkAuth() {
             console.error('Auth check failed:', error);
         }
         
-        // Token invalid, clear it
         localStorage.removeItem('tegrevinnan_admin_token');
         authToken = null;
     }
@@ -106,9 +110,31 @@ function setupEventListeners() {
         if (e.target === productModal) closeProductModal();
     });
     
+    // Categories
+    addCategoryBtn.addEventListener('click', () => openCategoryModal());
+    categoryModalClose.addEventListener('click', closeCategoryModal);
+    cancelCategory.addEventListener('click', closeCategoryModal);
+    categoryForm.addEventListener('submit', handleSaveCategory);
+    categoryModal.addEventListener('click', (e) => {
+        if (e.target === categoryModal) closeCategoryModal();
+    });
+    
+    // Auto-generate slug from name
+    document.getElementById('categoryName').addEventListener('input', (e) => {
+        const slugField = document.getElementById('categorySlug');
+        if (!currentCategoryId) { // Only auto-fill for new categories
+            slugField.value = e.target.value.toLowerCase()
+                .replace(/[åä]/g, 'a')
+                .replace(/ö/g, 'o')
+                .replace(/[^a-z0-9]/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+    });
+    
     // Delete modal
     cancelDelete.addEventListener('click', closeDeleteModal);
-    confirmDelete.addEventListener('click', handleDeleteProduct);
+    confirmDelete.addEventListener('click', handleDeleteConfirm);
     deleteModal.addEventListener('click', (e) => {
         if (e.target === deleteModal) closeDeleteModal();
     });
@@ -126,6 +152,7 @@ function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeProductModal();
+            closeCategoryModal();
             closeDeleteModal();
             closeOrderModal();
         }
@@ -189,6 +216,7 @@ function showLogin() {
 function showDashboard() {
     loginScreen.classList.add('hidden');
     adminDashboard.classList.add('active');
+    loadCategories();
     loadProducts();
     loadOrders();
 }
@@ -198,21 +226,164 @@ function showDashboard() {
 // ==========================================
 
 function switchSection(section) {
-    // Update nav items
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.toggle('active', item.dataset.section === section);
     });
     
-    // Update sections
     document.querySelectorAll('.admin-section').forEach(sec => {
         sec.classList.remove('active');
     });
     document.getElementById(`${section}Section`).classList.add('active');
     
-    // Load data if needed
     if (section === 'orders') {
         loadOrders();
+    } else if (section === 'categories') {
+        loadCategories();
     }
+}
+
+// ==========================================
+// CATEGORIES
+// ==========================================
+
+async function loadCategories() {
+    try {
+        const response = await fetch(API_BASE + '/api/categories');
+        categories = await response.json();
+        renderCategoriesTable();
+        updateProductCategoryDropdown();
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        showToast('Kunde inte ladda kategorier', 'error');
+    }
+}
+
+function renderCategoriesTable() {
+    if (categories.length === 0) {
+        categoriesTableBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem;">
+                    Inga kategorier. Lägg till din första kategori!
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    categoriesTableBody.innerHTML = categories.map(cat => `
+        <tr>
+            <td style="font-size: 1.5rem;">${cat.icon || '📦'}</td>
+            <td><strong>${cat.name}</strong></td>
+            <td><code>${cat.slug}</code></td>
+            <td>${cat.sortOrder}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="edit-btn" onclick="editCategory('${cat.id}')">Redigera</button>
+                    <button class="delete-btn-small" onclick="confirmDeleteCategory('${cat.id}')">Ta bort</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateProductCategoryDropdown() {
+    const dropdown = document.getElementById('productCategory');
+    if (categories.length === 0) {
+        dropdown.innerHTML = '<option value="">Inga kategorier - skapa en först</option>';
+    } else {
+        dropdown.innerHTML = categories.map(cat => 
+            `<option value="${cat.slug}">${cat.icon} ${cat.name}</option>`
+        ).join('');
+    }
+}
+
+function openCategoryModal(categoryId = null) {
+    currentCategoryId = categoryId;
+    
+    if (categoryId) {
+        const category = categories.find(c => c.id === categoryId);
+        if (!category) return;
+        
+        categoryModalTitle.textContent = 'Redigera kategori';
+        document.getElementById('categoryId').value = category.id;
+        document.getElementById('categoryName').value = category.name;
+        document.getElementById('categorySlug').value = category.slug;
+        document.getElementById('categoryIcon').value = category.icon || '';
+        document.getElementById('categorySortOrder').value = category.sortOrder || 0;
+    } else {
+        categoryModalTitle.textContent = 'Lägg till kategori';
+        categoryForm.reset();
+        document.getElementById('categoryId').value = '';
+        document.getElementById('categorySortOrder').value = '0';
+    }
+    
+    categoryModal.classList.add('active');
+}
+
+function closeCategoryModal() {
+    categoryModal.classList.remove('active');
+    currentCategoryId = null;
+}
+
+function editCategory(categoryId) {
+    openCategoryModal(categoryId);
+}
+
+async function handleSaveCategory(e) {
+    e.preventDefault();
+    
+    const categoryData = {
+        name: document.getElementById('categoryName').value,
+        slug: document.getElementById('categorySlug').value,
+        icon: document.getElementById('categoryIcon').value || '📦',
+        sortOrder: parseInt(document.getElementById('categorySortOrder').value) || 0
+    };
+    
+    const categoryId = document.getElementById('categoryId').value;
+    
+    try {
+        let response;
+        
+        if (categoryId) {
+            response = await fetch(`${API_BASE}/api/categories/${categoryId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authToken
+                },
+                body: JSON.stringify(categoryData)
+            });
+        } else {
+            response = await fetch(API_BASE + '/api/categories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authToken
+                },
+                body: JSON.stringify(categoryData)
+            });
+        }
+        
+        if (!response.ok) throw new Error('Save failed');
+        
+        closeCategoryModal();
+        loadCategories();
+        showToast(categoryId ? 'Kategori uppdaterad!' : 'Kategori tillagd!', 'success');
+        
+    } catch (error) {
+        console.error('Save error:', error);
+        showToast('Kunde inte spara kategorin', 'error');
+    }
+}
+
+function confirmDeleteCategory(categoryId) {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return;
+    
+    deleteItemId = categoryId;
+    deleteItemType = 'category';
+    deleteItemName.textContent = category.name;
+    deleteModal.classList.add('active');
 }
 
 // ==========================================
@@ -228,6 +399,16 @@ async function loadProducts() {
         console.error('Error loading products:', error);
         showToast('Kunde inte ladda produkter', 'error');
     }
+}
+
+function getCategoryIcon(slug) {
+    const category = categories.find(c => c.slug === slug);
+    return category ? category.icon : '📦';
+}
+
+function getCategoryName(slug) {
+    const category = categories.find(c => c.slug === slug);
+    return category ? category.name : slug;
 }
 
 function renderProductsTable() {
@@ -246,13 +427,13 @@ function renderProductsTable() {
         <tr>
             <td>
                 <div class="product-cell">
-                    <div class="product-icon">${categoryIcons[product.category] || '📦'}</div>
+                    <div class="product-icon">${getCategoryIcon(product.category)}</div>
                     <span class="product-name-cell">${product.name}</span>
                 </div>
             </td>
             <td><span class="category-badge">${getCategoryName(product.category)}</span></td>
             <td>${product.price} kr</td>
-            <td>${product.weight}</td>
+            <td>${product.weight || '-'}</td>
             <td>
                 <span class="stock-badge ${product.inStock ? 'in-stock' : 'out-of-stock'}">
                     ${product.inStock ? 'Ja' : 'Nej'}
@@ -268,13 +449,9 @@ function renderProductsTable() {
     `).join('');
 }
 
-function getCategoryName(category) {
-    const names = { te: 'Te', kaffe: 'Kaffe', choklad: 'Choklad' };
-    return names[category] || category;
-}
-
 function openProductModal(productId = null) {
     currentProductId = productId;
+    updateProductCategoryDropdown();
     
     if (productId) {
         const product = products.find(p => p.id === productId);
@@ -285,8 +462,9 @@ function openProductModal(productId = null) {
         document.getElementById('productName').value = product.name;
         document.getElementById('productCategory').value = product.category;
         document.getElementById('productPrice').value = product.price;
-        document.getElementById('productWeight').value = product.weight;
+        document.getElementById('productWeight').value = product.weight || '';
         document.getElementById('productOrigin').value = product.origin || '';
+        document.getElementById('productImage').value = product.image || '';
         document.getElementById('productInStock').checked = product.inStock;
         document.getElementById('productFeatured').checked = product.featured;
         document.getElementById('productDescription').value = product.description;
@@ -319,6 +497,7 @@ async function handleSaveProduct(e) {
         price: parseInt(document.getElementById('productPrice').value),
         weight: document.getElementById('productWeight').value,
         origin: document.getElementById('productOrigin').value || '',
+        image: document.getElementById('productImage').value || '',
         inStock: document.getElementById('productInStock').checked,
         featured: document.getElementById('productFeatured').checked,
         description: document.getElementById('productDescription').value
@@ -330,7 +509,7 @@ async function handleSaveProduct(e) {
         let response;
         
         if (productId) {
-            response = await fetch(`/api/products/${productId}`, {
+            response = await fetch(`${API_BASE}/api/products/${productId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -365,21 +544,31 @@ function confirmDeleteProduct(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
     
-    deleteProductId = productId;
-    deleteProductName.textContent = product.name;
+    deleteItemId = productId;
+    deleteItemType = 'product';
+    deleteItemName.textContent = product.name;
     deleteModal.classList.add('active');
 }
 
+// ==========================================
+// DELETE HANDLING
+// ==========================================
+
 function closeDeleteModal() {
     deleteModal.classList.remove('active');
-    deleteProductId = null;
+    deleteItemId = null;
+    deleteItemType = null;
 }
 
-async function handleDeleteProduct() {
-    if (!deleteProductId) return;
+async function handleDeleteConfirm() {
+    if (!deleteItemId || !deleteItemType) return;
     
     try {
-        const response = await fetch(`/api/products/${deleteProductId}`, {
+        const endpoint = deleteItemType === 'product' 
+            ? `${API_BASE}/api/products/${deleteItemId}`
+            : `${API_BASE}/api/categories/${deleteItemId}`;
+            
+        const response = await fetch(endpoint, {
             method: 'DELETE',
             headers: { 'Authorization': authToken }
         });
@@ -387,12 +576,18 @@ async function handleDeleteProduct() {
         if (!response.ok) throw new Error('Delete failed');
         
         closeDeleteModal();
-        loadProducts();
-        showToast('Produkt borttagen!', 'success');
+        
+        if (deleteItemType === 'product') {
+            loadProducts();
+            showToast('Produkt borttagen!', 'success');
+        } else {
+            loadCategories();
+            showToast('Kategori borttagen!', 'success');
+        }
         
     } catch (error) {
         console.error('Delete error:', error);
-        showToast('Kunde inte ta bort produkten', 'error');
+        showToast('Kunde inte ta bort', 'error');
     }
 }
 
@@ -433,7 +628,7 @@ function renderOrders() {
                 <span class="order-status ${order.status}">${getStatusName(order.status)}</span>
             </div>
             <div class="order-info">
-                <span class="order-customer">${order.customer.name}</span>
+                <span class="order-customer">${order.customer?.name || 'Okänd'}</span>
                 <span class="order-total">${order.total} kr</span>
             </div>
         </div>
@@ -454,6 +649,8 @@ function formatDate(dateString) {
 function getStatusName(status) {
     const names = {
         pending: 'Väntar',
+        pending_payment: 'Väntar betalning',
+        paid: 'Betald',
         confirmed: 'Bekräftad',
         shipped: 'Skickad',
         completed: 'Slutförd',
@@ -472,10 +669,12 @@ function openOrderModal(orderId) {
             <div class="order-detail-grid">
                 <div class="order-detail-item"><strong>Ordernummer:</strong> #${order.id.slice(0, 8).toUpperCase()}</div>
                 <div class="order-detail-item"><strong>Datum:</strong> ${formatDate(order.createdAt)}</div>
+                <div class="order-detail-item"><strong>Betalmetod:</strong> ${order.paymentMethod || 'Ej angiven'}</div>
                 <div class="order-detail-item">
                     <strong>Status:</strong>
                     <select class="status-select" onchange="updateOrderStatus('${order.id}', this.value)">
                         <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Väntar</option>
+                        <option value="paid" ${order.status === 'paid' ? 'selected' : ''}>Betald</option>
                         <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Bekräftad</option>
                         <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Skickad</option>
                         <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Slutförd</option>
@@ -488,25 +687,25 @@ function openOrderModal(orderId) {
         <div class="order-detail-section">
             <h3>Kund</h3>
             <div class="order-detail-grid">
-                <div class="order-detail-item"><strong>Namn:</strong> ${order.customer.name}</div>
-                <div class="order-detail-item"><strong>E-post:</strong> ${order.customer.email}</div>
-                <div class="order-detail-item"><strong>Telefon:</strong> ${order.customer.phone}</div>
-                <div class="order-detail-item"><strong>Adress:</strong> ${order.customer.address}, ${order.customer.postalCode} ${order.customer.city}</div>
+                <div class="order-detail-item"><strong>Namn:</strong> ${order.customer?.name || '-'}</div>
+                <div class="order-detail-item"><strong>E-post:</strong> ${order.customer?.email || '-'}</div>
+                <div class="order-detail-item"><strong>Telefon:</strong> ${order.customer?.phone || '-'}</div>
+                <div class="order-detail-item"><strong>Adress:</strong> ${order.customer?.address || '-'}, ${order.customer?.postalCode || ''} ${order.customer?.city || ''}</div>
             </div>
         </div>
         
         <div class="order-detail-section">
             <h3>Produkter</h3>
             <div class="order-items-list">
-                ${order.items.map(item => `
+                ${(order.items || []).map(item => `
                     <div class="order-item-row">
                         <span>${item.name} × ${item.quantity}</span>
-                        <span>${item.subtotal} kr</span>
+                        <span>${item.subtotal || item.price * item.quantity} kr</span>
                     </div>
                 `).join('')}
                 <div class="order-item-row">
                     <span>Frakt</span>
-                    <span>${order.shipping} kr</span>
+                    <span>${order.shipping || 0} kr</span>
                 </div>
                 <div class="order-item-row total">
                     <span>Totalt</span>
@@ -532,7 +731,7 @@ function closeOrderModal() {
 
 async function updateOrderStatus(orderId, status) {
     try {
-        const response = await fetch(`/api/orders/${orderId}`, {
+        const response = await fetch(`${API_BASE}/api/orders/${orderId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -619,4 +818,3 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-

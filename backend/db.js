@@ -63,6 +63,19 @@ async function initDatabase() {
             )
         `);
 
+        // Categories table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS categories (
+                id UUID PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                slug VARCHAR(100) UNIQUE NOT NULL,
+                icon VARCHAR(10) DEFAULT '📦',
+                sort_order INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         console.log('✅ Database tables initialized');
     } finally {
         client.release();
@@ -286,6 +299,99 @@ async function getAdminCount() {
     return parseInt(result.rows[0].count);
 }
 
+// Categories
+async function getAllCategories() {
+    const result = await pool.query(
+        'SELECT * FROM categories ORDER BY sort_order, name'
+    );
+    return result.rows.map(formatCategory);
+}
+
+async function getCategoryById(id) {
+    const result = await pool.query(
+        'SELECT * FROM categories WHERE id = $1',
+        [id]
+    );
+    return result.rows[0] ? formatCategory(result.rows[0]) : null;
+}
+
+async function getCategoryBySlug(slug) {
+    const result = await pool.query(
+        'SELECT * FROM categories WHERE slug = $1',
+        [slug]
+    );
+    return result.rows[0] ? formatCategory(result.rows[0]) : null;
+}
+
+async function createCategory(category) {
+    const result = await pool.query(
+        `INSERT INTO categories (id, name, slug, icon, sort_order)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [category.id, category.name, category.slug, category.icon || '📦', category.sortOrder || 0]
+    );
+    return formatCategory(result.rows[0]);
+}
+
+async function updateCategory(id, updates) {
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (updates.name !== undefined) {
+        fields.push(`name = $${paramCount++}`);
+        values.push(updates.name);
+    }
+    if (updates.slug !== undefined) {
+        fields.push(`slug = $${paramCount++}`);
+        values.push(updates.slug);
+    }
+    if (updates.icon !== undefined) {
+        fields.push(`icon = $${paramCount++}`);
+        values.push(updates.icon);
+    }
+    if (updates.sortOrder !== undefined) {
+        fields.push(`sort_order = $${paramCount++}`);
+        values.push(updates.sortOrder);
+    }
+
+    if (fields.length === 0) return null;
+
+    fields.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(id);
+
+    const result = await pool.query(
+        `UPDATE categories SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+        values
+    );
+    return result.rows[0] ? formatCategory(result.rows[0]) : null;
+}
+
+async function deleteCategory(id) {
+    const result = await pool.query(
+        'DELETE FROM categories WHERE id = $1 RETURNING id',
+        [id]
+    );
+    return result.rows.length > 0;
+}
+
+async function getCategoryCount() {
+    const result = await pool.query('SELECT COUNT(*) FROM categories');
+    return parseInt(result.rows[0].count);
+}
+
+function formatCategory(row) {
+    return {
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        icon: row.icon,
+        sortOrder: row.sort_order,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+    };
+}
+
 module.exports = {
     pool,
     initDatabase,
@@ -305,6 +411,14 @@ module.exports = {
     getAdminByUsername,
     createAdmin,
     updateAdminPassword,
-    getAdminCount
+    getAdminCount,
+    // Categories
+    getAllCategories,
+    getCategoryById,
+    getCategoryBySlug,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    getCategoryCount
 };
 

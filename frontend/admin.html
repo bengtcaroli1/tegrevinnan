@@ -47,6 +47,9 @@
                 <button class="nav-item active" data-section="products">
                     <span>📦</span> Produkter
                 </button>
+                <button class="nav-item" data-section="categories">
+                    <span>🏷️</span> Kategorier
+                </button>
                 <button class="nav-item" data-section="orders">
                     <span>📋</span> Beställningar
                 </button>
@@ -82,6 +85,30 @@
                         </thead>
                         <tbody id="productsTableBody">
                             <!-- Products loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Categories Section -->
+            <section class="admin-section" id="categoriesSection">
+                <div class="section-header">
+                    <h1>Kategorier</h1>
+                    <button class="add-btn" id="addCategoryBtn">+ Lägg till kategori</button>
+                </div>
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Ikon</th>
+                                <th>Namn</th>
+                                <th>Slug</th>
+                                <th>Ordning</th>
+                                <th>Åtgärder</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            <!-- Categories loaded here -->
                         </tbody>
                     </table>
                 </div>
@@ -151,9 +178,7 @@
                     <div class="form-group">
                         <label for="productCategory">Kategori *</label>
                         <select id="productCategory" required>
-                            <option value="te">Te</option>
-                            <option value="kaffe">Kaffe</option>
-                            <option value="choklad">Choklad</option>
+                            <!-- Categories loaded dynamically -->
                         </select>
                     </div>
                 </div>
@@ -172,16 +197,20 @@
                         <label for="productOrigin">Ursprung</label>
                         <input type="text" id="productOrigin" placeholder="ex: Sri Lanka">
                     </div>
-                    <div class="form-group checkbox-group">
-                        <label>
-                            <input type="checkbox" id="productInStock" checked>
-                            I lager
-                        </label>
-                        <label>
-                            <input type="checkbox" id="productFeatured">
-                            Utvald produkt
-                        </label>
+                    <div class="form-group">
+                        <label for="productImage">Bild-URL</label>
+                        <input type="text" id="productImage" placeholder="ex: /images/produkt.jpg">
                     </div>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="productInStock" checked>
+                        I lager
+                    </label>
+                    <label>
+                        <input type="checkbox" id="productFeatured">
+                        Utvald produkt
+                    </label>
                 </div>
                 <div class="form-group">
                     <label for="productDescription">Beskrivning *</label>
@@ -214,12 +243,47 @@
             <div class="modal-header">
                 <h2>Bekräfta borttagning</h2>
             </div>
-            <p>Är du säker på att du vill ta bort denna produkt?</p>
-            <p class="delete-product-name" id="deleteProductName"></p>
+            <p>Är du säker på att du vill ta bort detta?</p>
+            <p class="delete-product-name" id="deleteItemName"></p>
             <div class="modal-actions">
                 <button class="cancel-btn" id="cancelDelete">Avbryt</button>
                 <button class="delete-btn" id="confirmDelete">Ta bort</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Lägg till kategori</h2>
+                <button class="modal-close" id="categoryModalClose">&times;</button>
+            </div>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <div class="form-group">
+                    <label for="categoryName">Namn *</label>
+                    <input type="text" id="categoryName" required placeholder="ex: Te">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categorySlug">Slug *</label>
+                        <input type="text" id="categorySlug" required placeholder="ex: te">
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryIcon">Ikon</label>
+                        <input type="text" id="categoryIcon" placeholder="ex: 🍵" maxlength="4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="categorySortOrder">Sorteringsordning</label>
+                    <input type="number" id="categorySortOrder" value="0" min="0">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelCategory">Avbryt</button>
+                    <button type="submit" class="save-btn">Spara kategori</button>
+                </div>
+            </form>
         </div>
     </div>
 

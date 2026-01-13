@@ -7,6 +7,7 @@ const API_BASE = window.API_URL || '';
 
 // State
 let products = [];
+let categories = [];
 let cart = [];
 let currentCategory = 'all';
 let stripeConfig = { isConfigured: false, publishableKey: null };
@@ -32,24 +33,66 @@ const confirmationModal = document.getElementById('confirmationModal');
 const confirmationClose = document.getElementById('confirmationClose');
 const orderId = document.getElementById('orderId');
 
-// Category icons
-const categoryIcons = {
-    te: '🍵',
-    kaffe: '☕',
-    choklad: '🍫'
-};
-
 // ==========================================
 // INITIALIZATION
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
     loadCart();
+    loadCategories();
     loadProducts();
     loadStripeConfig();
     setupEventListeners();
     checkForCancelledPayment();
 });
+
+async function loadCategories() {
+    try {
+        const response = await fetch(`${API_BASE}/api/categories`);
+        categories = await response.json();
+        renderCategoryFilters();
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+function getCategoryIcon(slug) {
+    const category = categories.find(c => c.slug === slug);
+    return category ? category.icon : '📦';
+}
+
+function getCategoryName(slug) {
+    const category = categories.find(c => c.slug === slug);
+    return category ? category.name : slug;
+}
+
+function renderCategoryFilters() {
+    const categoryFilters = document.querySelector('.category-filters');
+    if (!categoryFilters) return;
+    
+    categoryFilters.innerHTML = `
+        <button class="category-btn ${currentCategory === 'all' ? 'active' : ''}" data-category="all">
+            <span class="category-icon">✨</span>
+            <span>Alla</span>
+        </button>
+        ${categories.map(cat => `
+            <button class="category-btn ${currentCategory === cat.slug ? 'active' : ''}" data-category="${cat.slug}">
+                <span class="category-icon">${cat.icon}</span>
+                <span>${cat.name}</span>
+            </button>
+        `).join('')}
+    `;
+    
+    // Re-attach event listeners
+    categoryFilters.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentCategory = btn.dataset.category;
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProducts();
+        });
+    });
+}
 
 async function loadProducts() {
     try {
@@ -153,7 +196,7 @@ function renderProducts() {
     productsGrid.innerHTML = filteredProducts.map(product => `
         <div class="product-card" data-id="${product.id}">
             <div class="product-image">
-                ${categoryIcons[product.category] || '📦'}
+                ${getCategoryIcon(product.category)}
                 ${product.featured ? '<span class="product-badge">Utvalt</span>' : ''}
             </div>
             <div class="product-info">
@@ -193,7 +236,7 @@ function openProductModal(productId) {
     
     modalBody.innerHTML = `
         <div class="product-modal-image">
-            ${categoryIcons[product.category] || '📦'}
+            ${getCategoryIcon(product.category)}
         </div>
         <div class="product-modal-category">${getCategoryName(product.category)}</div>
         <h2 class="product-modal-title">${product.name}</h2>
@@ -340,7 +383,7 @@ function renderCart() {
         cartItems.innerHTML = cart.map(item => `
             <div class="cart-item">
                 <div class="cart-item-image">
-                    ${categoryIcons[item.category] || '📦'}
+                    ${getCategoryIcon(item.category)}
                 </div>
                 <div class="cart-item-info">
                     <div class="cart-item-name">${item.name}</div>
