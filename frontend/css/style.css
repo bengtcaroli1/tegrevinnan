@@ -467,6 +467,26 @@ a:hover {
     overflow: hidden;
 }
 
+.product-image.has-image {
+    background: var(--color-cream);
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-medium);
+}
+
+.product-card:hover .product-image img {
+    transform: scale(1.05);
+}
+
+.product-icon-large {
+    font-size: 4rem;
+    opacity: 0.8;
+}
+
 .product-image::after {
     content: '';
     position: absolute;
@@ -475,6 +495,7 @@ a:hover {
     right: 0;
     bottom: 0;
     background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.05) 100%);
+    pointer-events: none;
 }
 
 .product-badge {
@@ -825,7 +846,7 @@ a:hover {
 
 /* Product Modal */
 .product-modal-image {
-    height: 250px;
+    height: 280px;
     background: linear-gradient(135deg, var(--color-cream-dark) 0%, var(--color-cream) 100%);
     display: flex;
     align-items: center;
@@ -833,6 +854,23 @@ a:hover {
     font-size: 6rem;
     border-radius: 8px;
     margin-bottom: var(--spacing-md);
+    overflow: hidden;
+}
+
+.product-modal-image.has-image {
+    background: var(--color-cream);
+}
+
+.product-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: var(--color-cream);
+}
+
+.modal-icon-large {
+    font-size: 6rem;
+    opacity: 0.8;
 }
 
 .product-modal-category {

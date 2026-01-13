@@ -195,8 +195,11 @@ function renderProducts() {
     
     productsGrid.innerHTML = filteredProducts.map(product => `
         <div class="product-card" data-id="${product.id}">
-            <div class="product-image">
-                ${getCategoryIcon(product.category)}
+            <div class="product-image ${product.image ? 'has-image' : ''}">
+                ${product.image 
+                    ? `<img src="${product.image}" alt="${product.name}" loading="lazy">`
+                    : `<span class="product-icon-large">${getCategoryIcon(product.category)}</span>`
+                }
                 ${product.featured ? '<span class="product-badge">Utvalt</span>' : ''}
             </div>
             <div class="product-info">
@@ -235,14 +238,17 @@ function openProductModal(productId) {
     if (!product) return;
     
     modalBody.innerHTML = `
-        <div class="product-modal-image">
-            ${getCategoryIcon(product.category)}
+        <div class="product-modal-image ${product.image ? 'has-image' : ''}">
+            ${product.image 
+                ? `<img src="${product.image}" alt="${product.name}">`
+                : `<span class="modal-icon-large">${getCategoryIcon(product.category)}</span>`
+            }
         </div>
         <div class="product-modal-category">${getCategoryName(product.category)}</div>
         <h2 class="product-modal-title">${product.name}</h2>
         <div class="product-modal-details">
             <span>📦 ${product.weight}</span>
-            <span>🌍 ${product.origin}</span>
+            ${product.origin ? `<span>🌍 ${product.origin}</span>` : ''}
             <span>${product.inStock ? '✓ I lager' : '✗ Slut i lager'}</span>
         </div>
         <div class="product-modal-price">${product.price} kr</div>
