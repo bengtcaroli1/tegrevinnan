@@ -1,0 +1,7 @@
+{
+  "outputDirectory": "frontend",
+  "installCommand": "echo 'No install needed'",
+  "buildCommand": "echo 'No build needed'",
+  "framework": null
+}
+
