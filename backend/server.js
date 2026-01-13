@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const db = require('./db');
 
 const app = express();
@@ -12,6 +14,26 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_PLACEHOLDER';
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_PLACEHOLDER';
 const stripe = require('stripe')(STRIPE_SECRET_KEY);
+
+// Cloudinary setup
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Multer setup for memory storage
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Endast bilder är tillåtna'), false);
+        }
+    }
+});
 
 // CORS - allow frontend to access API
 app.use(cors({
@@ -123,6 +145,66 @@ async function initialize() {
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// --- Image Upload ---
+app.post('/api/upload', requireAuth, upload.single('image'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'Ingen bild bifogad' });
+    }
+    
+    // Check if Cloudinary is configured
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+        return res.status(500).json({ error: 'Cloudinary är inte konfigurerat' });
+    }
+    
+    try {
+        // Upload to Cloudinary via stream
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: 'tegrevinnan',
+                    transformation: [
+                        { width: 800, height: 800, crop: 'limit' },
+                        { quality: 'auto', fetch_format: 'auto' }
+                    ]
+                },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
+            uploadStream.end(req.file.buffer);
+        });
+        
+        res.json({
+            url: result.secure_url,
+            publicId: result.public_id,
+            width: result.width,
+            height: result.height
+        });
+        
+    } catch (error) {
+        console.error('Image upload error:', error);
+        res.status(500).json({ error: 'Kunde inte ladda upp bilden' });
+    }
+});
+
+// Delete uploaded image
+app.delete('/api/upload/:publicId', requireAuth, async (req, res) => {
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+        return res.status(500).json({ error: 'Cloudinary är inte konfigurerat' });
+    }
+    
+    try {
+        // publicId comes as path param, may include folder
+        const publicId = 'tegrevinnan/' + req.params.publicId;
+        await cloudinary.uploader.destroy(publicId);
+        res.json({ message: 'Bild borttagen' });
+    } catch (error) {
+        console.error('Image delete error:', error);
+        res.status(500).json({ error: 'Kunde inte ta bort bilden' });
+    }
 });
 
 // Database initialization endpoint (run once to seed products)

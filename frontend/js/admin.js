@@ -110,6 +110,9 @@ function setupEventListeners() {
         if (e.target === productModal) closeProductModal();
     });
     
+    // Image upload
+    setupImageUpload();
+    
     // Categories
     addCategoryBtn.addEventListener('click', () => openCategoryModal());
     categoryModalClose.addEventListener('click', closeCategoryModal);
@@ -387,6 +390,145 @@ function confirmDeleteCategory(categoryId) {
 }
 
 // ==========================================
+// IMAGE UPLOAD
+// ==========================================
+
+let currentImageUrl = '';
+
+function setupImageUpload() {
+    const imagePreview = document.getElementById('imagePreview');
+    const imageFileInput = document.getElementById('productImageFile');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    
+    if (!imagePreview) return;
+    
+    // Click on preview area to trigger file input
+    imagePreview.addEventListener('click', (e) => {
+        if (e.target !== removeImageBtn && !removeImageBtn.contains(e.target)) {
+            imageFileInput.click();
+        }
+    });
+    
+    // Handle file selection
+    imageFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Bilden får max vara 5 MB', 'error');
+            return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('Endast bilder är tillåtna', 'error');
+            return;
+        }
+        
+        await uploadImage(file);
+    });
+    
+    // Remove image button
+    removeImageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearImagePreview();
+    });
+}
+
+async function uploadImage(file) {
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const previewImg = document.getElementById('previewImg');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    
+    // Show progress
+    uploadPlaceholder.style.display = 'none';
+    previewImg.style.display = 'none';
+    removeImageBtn.style.display = 'none';
+    uploadProgress.style.display = 'flex';
+    progressFill.style.width = '30%';
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+        progressFill.style.width = '60%';
+        
+        const response = await fetch(`${API_BASE}/api/upload`, {
+            method: 'POST',
+            headers: {
+                'Authorization': authToken
+            },
+            body: formData
+        });
+        
+        progressFill.style.width = '90%';
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Upload failed');
+        }
+        
+        const data = await response.json();
+        progressFill.style.width = '100%';
+        
+        // Update preview
+        setTimeout(() => {
+            uploadProgress.style.display = 'none';
+            previewImg.src = data.url;
+            previewImg.style.display = 'block';
+            removeImageBtn.style.display = 'flex';
+            
+            // Store the URL
+            currentImageUrl = data.url;
+            document.getElementById('productImage').value = data.url;
+        }, 200);
+        
+        showToast('Bild uppladdad!', 'success');
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        uploadProgress.style.display = 'none';
+        uploadPlaceholder.style.display = 'flex';
+        showToast(error.message || 'Kunde inte ladda upp bilden', 'error');
+    }
+}
+
+function clearImagePreview() {
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const previewImg = document.getElementById('previewImg');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const imageFileInput = document.getElementById('productImageFile');
+    
+    uploadPlaceholder.style.display = 'flex';
+    previewImg.style.display = 'none';
+    previewImg.src = '';
+    removeImageBtn.style.display = 'none';
+    imageFileInput.value = '';
+    currentImageUrl = '';
+    document.getElementById('productImage').value = '';
+}
+
+function setImagePreview(url) {
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const previewImg = document.getElementById('previewImg');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    
+    if (url) {
+        uploadPlaceholder.style.display = 'none';
+        previewImg.src = url;
+        previewImg.style.display = 'block';
+        removeImageBtn.style.display = 'flex';
+        currentImageUrl = url;
+        document.getElementById('productImage').value = url;
+    } else {
+        clearImagePreview();
+    }
+}
+
+// ==========================================
 // PRODUCTS
 // ==========================================
 
@@ -427,7 +569,10 @@ function renderProductsTable() {
         <tr>
             <td>
                 <div class="product-cell">
-                    <div class="product-icon">${getCategoryIcon(product.category)}</div>
+                    ${product.image 
+                        ? `<img src="${product.image}" alt="${product.name}" class="product-thumb">`
+                        : `<div class="product-icon">${getCategoryIcon(product.category)}</div>`
+                    }
                     <span class="product-name-cell">${product.name}</span>
                 </div>
             </td>
@@ -464,16 +609,21 @@ function openProductModal(productId = null) {
         document.getElementById('productPrice').value = product.price;
         document.getElementById('productWeight').value = product.weight || '';
         document.getElementById('productOrigin').value = product.origin || '';
-        document.getElementById('productImage').value = product.image || '';
         document.getElementById('productInStock').checked = product.inStock;
         document.getElementById('productFeatured').checked = product.featured;
         document.getElementById('productDescription').value = product.description;
+        
+        // Set image preview
+        setImagePreview(product.image || '');
     } else {
         modalTitle.textContent = 'Lägg till produkt';
         productForm.reset();
         document.getElementById('productId').value = '';
         document.getElementById('productInStock').checked = true;
         document.getElementById('productFeatured').checked = false;
+        
+        // Clear image preview
+        clearImagePreview();
     }
     
     productModal.classList.add('active');
@@ -482,6 +632,7 @@ function openProductModal(productId = null) {
 function closeProductModal() {
     productModal.classList.remove('active');
     currentProductId = null;
+    clearImagePreview();
 }
 
 function editProduct(productId) {

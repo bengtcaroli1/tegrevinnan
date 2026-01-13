@@ -192,14 +192,28 @@
                         <input type="text" id="productWeight" required placeholder="ex: 100g">
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="productOrigin">Ursprung</label>
-                        <input type="text" id="productOrigin" placeholder="ex: Sri Lanka">
-                    </div>
-                    <div class="form-group">
-                        <label for="productImage">Bild-URL</label>
-                        <input type="text" id="productImage" placeholder="ex: /images/produkt.jpg">
+                <div class="form-group">
+                    <label for="productOrigin">Ursprung</label>
+                    <input type="text" id="productOrigin" placeholder="ex: Sri Lanka">
+                </div>
+                <div class="form-group">
+                    <label>Produktbild</label>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <input type="file" id="productImageFile" accept="image/*" hidden>
+                        <input type="hidden" id="productImage">
+                        <div class="image-preview" id="imagePreview">
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <span class="upload-icon">📷</span>
+                                <span>Klicka för att ladda upp bild</span>
+                                <span class="upload-hint">Max 5 MB, JPG/PNG/WebP</span>
+                            </div>
+                            <img id="previewImg" src="" alt="Förhandsgranskning" style="display: none;">
+                            <button type="button" class="remove-image-btn" id="removeImageBtn" style="display: none;">✕</button>
+                        </div>
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                            <span>Laddar upp...</span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group checkbox-group">
