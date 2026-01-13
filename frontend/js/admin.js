@@ -714,10 +714,14 @@ function closeDeleteModal() {
 async function handleDeleteConfirm() {
     if (!deleteItemId || !deleteItemType) return;
     
+    // Save type before closing modal (which resets it)
+    const itemType = deleteItemType;
+    const itemId = deleteItemId;
+    
     try {
-        const endpoint = deleteItemType === 'product' 
-            ? `${API_BASE}/api/products/${deleteItemId}`
-            : `${API_BASE}/api/categories/${deleteItemId}`;
+        const endpoint = itemType === 'product' 
+            ? `${API_BASE}/api/products/${itemId}`
+            : `${API_BASE}/api/categories/${itemId}`;
             
         const response = await fetch(endpoint, {
             method: 'DELETE',
@@ -728,7 +732,7 @@ async function handleDeleteConfirm() {
         
         closeDeleteModal();
         
-        if (deleteItemType === 'product') {
+        if (itemType === 'product') {
             loadProducts();
             showToast('Produkt borttagen!', 'success');
         } else {
@@ -738,6 +742,7 @@ async function handleDeleteConfirm() {
         
     } catch (error) {
         console.error('Delete error:', error);
+        closeDeleteModal();
         showToast('Kunde inte ta bort', 'error');
     }
 }
