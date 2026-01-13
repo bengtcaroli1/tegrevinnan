@@ -18,7 +18,7 @@ async function initDatabase() {
                 category VARCHAR(50) NOT NULL,
                 price INTEGER NOT NULL,
                 description TEXT,
-                image VARCHAR(255),
+                image TEXT,
                 weight VARCHAR(50),
                 origin VARCHAR(100),
                 in_stock BOOLEAN DEFAULT true,
@@ -75,6 +75,14 @@ async function initDatabase() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Migration: Change image column from VARCHAR to TEXT for base64 storage
+        await client.query(`
+            ALTER TABLE products 
+            ALTER COLUMN image TYPE TEXT
+        `).catch(() => {
+            // Column already TEXT, ignore error
+        });
 
         console.log('✅ Database tables initialized');
     } finally {
