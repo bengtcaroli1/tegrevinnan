@@ -130,8 +130,68 @@
                     <h1>Inställningar</h1>
                 </div>
                 <div class="settings-content">
+                    <!-- Site Settings -->
+                    <div class="settings-card wide">
+                        <h3>🏪 Butiksinformation</h3>
+                        <form id="siteSettingsForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="siteName">Butiksnamn</label>
+                                    <input type="text" id="siteName" placeholder="Tegrevinnan">
+                                </div>
+                                <div class="form-group">
+                                    <label for="copyrightYear">Upphovsrättsår</label>
+                                    <input type="text" id="copyrightYear" placeholder="2024">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="siteTagline">Beskrivning/Slogan</label>
+                                <textarea id="siteTagline" rows="2" placeholder="Utsökta smaker sedan 1892..."></textarea>
+                            </div>
+                            
+                            <h4>📞 Kontakt</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="contactEmail">E-post</label>
+                                    <input type="email" id="contactEmail" placeholder="info@tegrevinnan.se">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contactPhone">Telefon</label>
+                                    <input type="text" id="contactPhone" placeholder="08-123 45 67">
+                                </div>
+                            </div>
+                            
+                            <h4>📍 Adress</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="addressStreet">Gatuadress</label>
+                                    <input type="text" id="addressStreet" placeholder="Storgatan 15">
+                                </div>
+                                <div class="form-group">
+                                    <label for="addressCity">Postnummer & Ort</label>
+                                    <input type="text" id="addressCity" placeholder="111 22 Stockholm">
+                                </div>
+                            </div>
+                            
+                            <h4>🕐 Öppettider</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="hoursWeekday">Vardagar</label>
+                                    <input type="text" id="hoursWeekday" placeholder="Mån-Fre: 10-18">
+                                </div>
+                                <div class="form-group">
+                                    <label for="hoursWeekend">Helg</label>
+                                    <input type="text" id="hoursWeekend" placeholder="Lör: 10-16">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="save-btn">Spara inställningar</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Password -->
                     <div class="settings-card">
-                        <h3>Byt lösenord</h3>
+                        <h3>🔒 Byt lösenord</h3>
                         <form id="passwordForm">
                             <div class="form-group">
                                 <label for="currentPassword">Nuvarande lösenord</label>
@@ -148,8 +208,10 @@
                             <button type="submit" class="save-btn">Spara lösenord</button>
                         </form>
                     </div>
+                    
+                    <!-- Info -->
                     <div class="settings-card">
-                        <h3>Information</h3>
+                        <h3>ℹ️ Information</h3>
                         <p><strong>Version:</strong> 1.0.0</p>
                         <p><strong>Standard inloggning:</strong></p>
                         <p>Användarnamn: admin</p>

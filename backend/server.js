@@ -347,6 +347,44 @@ app.get('/api/stripe/session/:sessionId', async (req, res) => {
     }
 });
 
+// --- Settings ---
+// Public endpoint to get site settings (for footer etc)
+app.get('/api/settings', async (req, res) => {
+    try {
+        const settings = await db.getAllSettings();
+        
+        // Return default values if not set
+        const defaults = {
+            siteName: 'Tegrevinnan',
+            siteTagline: 'Utsökta smaker sedan 1892. Te, kaffe och choklad av högsta kvalitet.',
+            contactEmail: 'info@tegrevinnan.se',
+            contactPhone: '08-123 45 67',
+            addressStreet: 'Storgatan 15',
+            addressCity: '111 22 Stockholm',
+            hoursWeekday: 'Mån-Fre: 10-18',
+            hoursWeekend: 'Lör: 10-16',
+            copyrightYear: new Date().getFullYear().toString()
+        };
+        
+        res.json({ ...defaults, ...settings });
+    } catch (error) {
+        console.error('Error fetching settings:', error);
+        res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+});
+
+// Admin endpoint to update settings
+app.put('/api/settings', requireAuth, async (req, res) => {
+    try {
+        await db.setSettings(req.body);
+        const settings = await db.getAllSettings();
+        res.json(settings);
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        res.status(500).json({ error: 'Failed to update settings' });
+    }
+});
+
 // --- Categories ---
 app.get('/api/categories', async (req, res) => {
     try {

@@ -76,6 +76,15 @@ async function initDatabase() {
             )
         `);
 
+        // Settings table (key-value store for site settings)
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS settings (
+                key VARCHAR(100) PRIMARY KEY,
+                value TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         // Migration: Change image column from VARCHAR to TEXT for base64 storage
         await client.query(`
             ALTER TABLE products 
@@ -400,6 +409,56 @@ function formatCategory(row) {
     };
 }
 
+// Settings
+async function getAllSettings() {
+    const result = await pool.query('SELECT key, value FROM settings');
+    const settings = {};
+    result.rows.forEach(row => {
+        settings[row.key] = row.value;
+    });
+    return settings;
+}
+
+async function getSetting(key) {
+    const result = await pool.query(
+        'SELECT value FROM settings WHERE key = $1',
+        [key]
+    );
+    return result.rows[0]?.value || null;
+}
+
+async function setSetting(key, value) {
+    await pool.query(`
+        INSERT INTO settings (key, value, updated_at)
+        VALUES ($1, $2, CURRENT_TIMESTAMP)
+        ON CONFLICT (key) DO UPDATE SET
+            value = EXCLUDED.value,
+            updated_at = CURRENT_TIMESTAMP
+    `, [key, value]);
+}
+
+async function setSettings(settings) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        for (const [key, value] of Object.entries(settings)) {
+            await client.query(`
+                INSERT INTO settings (key, value, updated_at)
+                VALUES ($1, $2, CURRENT_TIMESTAMP)
+                ON CONFLICT (key) DO UPDATE SET
+                    value = EXCLUDED.value,
+                    updated_at = CURRENT_TIMESTAMP
+            `, [key, value]);
+        }
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
 module.exports = {
     pool,
     initDatabase,
@@ -427,6 +486,11 @@ module.exports = {
     createCategory,
     updateCategory,
     deleteCategory,
-    getCategoryCount
+    getCategoryCount,
+    // Settings
+    getAllSettings,
+    getSetting,
+    setSetting,
+    setSettings
 };
 

@@ -54,6 +54,7 @@ const orderDetail = document.getElementById('orderDetail');
 
 // Settings
 const passwordForm = document.getElementById('passwordForm');
+const siteSettingsForm = document.getElementById('siteSettingsForm');
 
 // ==========================================
 // INITIALIZATION
@@ -150,6 +151,7 @@ function setupEventListeners() {
     
     // Settings
     passwordForm.addEventListener('submit', handleChangePassword);
+    siteSettingsForm.addEventListener('submit', handleSaveSiteSettings);
     
     // Keyboard
     document.addEventListener('keydown', (e) => {
@@ -242,6 +244,8 @@ function switchSection(section) {
         loadOrders();
     } else if (section === 'categories') {
         loadCategories();
+    } else if (section === 'settings') {
+        loadSiteSettings();
     }
 }
 
@@ -910,6 +914,63 @@ async function updateOrderStatus(orderId, status) {
 // ==========================================
 // SETTINGS
 // ==========================================
+
+async function loadSiteSettings() {
+    try {
+        const response = await fetch(API_BASE + '/api/settings');
+        const settings = await response.json();
+        
+        // Populate form fields
+        document.getElementById('siteName').value = settings.siteName || '';
+        document.getElementById('siteTagline').value = settings.siteTagline || '';
+        document.getElementById('contactEmail').value = settings.contactEmail || '';
+        document.getElementById('contactPhone').value = settings.contactPhone || '';
+        document.getElementById('addressStreet').value = settings.addressStreet || '';
+        document.getElementById('addressCity').value = settings.addressCity || '';
+        document.getElementById('hoursWeekday').value = settings.hoursWeekday || '';
+        document.getElementById('hoursWeekend').value = settings.hoursWeekend || '';
+        document.getElementById('copyrightYear').value = settings.copyrightYear || '';
+        
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        showToast('Kunde inte ladda inställningar', 'error');
+    }
+}
+
+async function handleSaveSiteSettings(e) {
+    e.preventDefault();
+    
+    const settings = {
+        siteName: document.getElementById('siteName').value,
+        siteTagline: document.getElementById('siteTagline').value,
+        contactEmail: document.getElementById('contactEmail').value,
+        contactPhone: document.getElementById('contactPhone').value,
+        addressStreet: document.getElementById('addressStreet').value,
+        addressCity: document.getElementById('addressCity').value,
+        hoursWeekday: document.getElementById('hoursWeekday').value,
+        hoursWeekend: document.getElementById('hoursWeekend').value,
+        copyrightYear: document.getElementById('copyrightYear').value
+    };
+    
+    try {
+        const response = await fetch(API_BASE + '/api/settings', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authToken
+            },
+            body: JSON.stringify(settings)
+        });
+        
+        if (!response.ok) throw new Error('Save failed');
+        
+        showToast('Inställningar sparade!', 'success');
+        
+    } catch (error) {
+        console.error('Save settings error:', error);
+        showToast('Kunde inte spara inställningar', 'error');
+    }
+}
 
 async function handleChangePassword(e) {
     e.preventDefault();

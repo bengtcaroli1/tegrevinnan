@@ -584,12 +584,23 @@ code {
     padding: var(--spacing-lg);
 }
 
+.settings-card.wide {
+    grid-column: 1 / -1;
+}
+
 .settings-card h3 {
     font-family: var(--font-display);
     color: var(--color-burgundy);
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-sm);
     border-bottom: 1px solid var(--color-border);
+}
+
+.settings-card h4 {
+    font-family: var(--font-display);
+    color: var(--color-forest);
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+    font-size: 1rem;
 }
 
 .settings-card .form-group {
@@ -603,7 +614,8 @@ code {
     margin-bottom: 4px;
 }
 
-.settings-card input {
+.settings-card input,
+.settings-card textarea {
     width: 100%;
     padding: 10px;
     border: 2px solid var(--color-border);
@@ -612,7 +624,13 @@ code {
     font-size: 0.95rem;
 }
 
-.settings-card input:focus {
+.settings-card textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.settings-card input:focus,
+.settings-card textarea:focus {
     outline: none;
     border-color: var(--color-burgundy);
 }

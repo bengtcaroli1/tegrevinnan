@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCategories();
     loadProducts();
     loadStripeConfig();
+    loadFooterSettings();
     setupEventListeners();
     checkForCancelledPayment();
 });
@@ -112,6 +113,34 @@ async function loadStripeConfig() {
         console.log('Stripe configured:', stripeConfig.isConfigured);
     } catch (error) {
         console.error('Error loading Stripe config:', error);
+    }
+}
+
+async function loadFooterSettings() {
+    try {
+        const response = await fetch(`${API_BASE}/api/settings`);
+        const settings = await response.json();
+        
+        // Update footer elements if they exist
+        const setTextContent = (id, value) => {
+            const el = document.getElementById(id);
+            if (el && value) el.textContent = value;
+        };
+        
+        setTextContent('footerSiteName', settings.siteName);
+        setTextContent('footerTagline', settings.siteTagline);
+        setTextContent('footerEmail', settings.contactEmail);
+        setTextContent('footerPhone', settings.contactPhone);
+        setTextContent('footerStreet', settings.addressStreet);
+        setTextContent('footerCity', settings.addressCity);
+        setTextContent('footerWeekday', settings.hoursWeekday);
+        setTextContent('footerWeekend', settings.hoursWeekend);
+        setTextContent('footerYear', settings.copyrightYear);
+        setTextContent('footerCopyright', settings.siteName);
+        
+    } catch (error) {
+        console.error('Error loading footer settings:', error);
+        // Keep default values if API fails
     }
 }
 
