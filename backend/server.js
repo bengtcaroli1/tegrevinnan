@@ -105,6 +105,45 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Database initialization endpoint (run once to seed products)
+app.post('/api/init-database', async (req, res) => {
+    const initSecret = req.headers['x-init-secret'];
+    if (initSecret !== 'tegrevinnan-init-2024') {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    try {
+        const existingProducts = await db.getAllProducts();
+        if (existingProducts.length > 0) {
+            return res.json({ message: 'Database already has products', count: existingProducts.length });
+        }
+        
+        const sampleProducts = [
+            { id: require('uuid').v4(), name: "Earl Grey Imperial", category: "te", price: 149, description: "Ett utsökt svart te aromatiserat med bergamott från Kalabrien.", weight: "100g", origin: "Sri Lanka", inStock: true, featured: true },
+            { id: require('uuid').v4(), name: "English Breakfast", category: "te", price: 129, description: "En kraftfull blandning av Assam, Ceylon och kenyanskt te.", weight: "100g", origin: "Blandning", inStock: true, featured: true },
+            { id: require('uuid').v4(), name: "Darjeeling First Flush", category: "te", price: 219, description: "Champagnen bland te. Ljust, blommigt och med en subtil muskatellton.", weight: "50g", origin: "Indien", inStock: true, featured: false },
+            { id: require('uuid').v4(), name: "Lady Grey", category: "te", price: 159, description: "En mildare variant av Earl Grey med citrus och blåklint.", weight: "100g", origin: "Kina", inStock: true, featured: false },
+            { id: require('uuid').v4(), name: "Lapsang Souchong", category: "te", price: 179, description: "Rökt svart te från Fujian-provinsen. Intensiv, rökig smak.", weight: "100g", origin: "Kina", inStock: true, featured: false },
+            { id: require('uuid').v4(), name: "Ethiopian Yirgacheffe", category: "kaffe", price: 189, description: "Enastående kaffe med toner av blåbär, jasmin och citrus.", weight: "250g", origin: "Etiopien", inStock: true, featured: true },
+            { id: require('uuid').v4(), name: "Colombian Supremo", category: "kaffe", price: 169, description: "Välbalanserat kaffe med nötiga toner och en touch av karamell.", weight: "250g", origin: "Colombia", inStock: true, featured: false },
+            { id: require('uuid').v4(), name: "Jamaican Blue Mountain", category: "kaffe", price: 449, description: "Ett av världens mest exklusiva kaffen. Mjukt och komplext.", weight: "200g", origin: "Jamaica", inStock: true, featured: true },
+            { id: require('uuid').v4(), name: "Single Origin Ecuador 70%", category: "choklad", price: 89, description: "Mörk choklad med intensiva toner av röda bär.", weight: "100g", origin: "Ecuador", inStock: true, featured: true },
+            { id: require('uuid').v4(), name: "Belgisk Mjölkchoklad", category: "choklad", price: 79, description: "Krämig och klassisk belgisk mjölkchoklad.", weight: "100g", origin: "Belgien", inStock: true, featured: false },
+            { id: require('uuid').v4(), name: "Chokladpraliner Assorterade", category: "choklad", price: 249, description: "En elegant ask med 16 handgjorda praliner.", weight: "200g", origin: "Sverige", inStock: true, featured: true },
+            { id: require('uuid').v4(), name: "Varm Choklad Deluxe", category: "choklad", price: 119, description: "Lyxig drickchoklad med 60% kakao.", weight: "300g", origin: "Frankrike", inStock: true, featured: false }
+        ];
+        
+        for (const product of sampleProducts) {
+            await db.createProduct(product);
+        }
+        
+        res.json({ message: 'Database initialized', productsCreated: sampleProducts.length });
+    } catch (error) {
+        console.error('Init error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- Stripe Config ---
 app.get('/api/stripe/config', (req, res) => {
     res.json({ 
